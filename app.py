@@ -10,10 +10,6 @@ from celery.result import AsyncResult
 # Load environment variables from .env file
 load_dotenv()
 
-# Ensure the logs directory exists; create it if it does not
-if not os.path.exists('./logs'):
-    os.makedirs('./logs')
-
 # Initialize Flask app
 app = Flask(__name__)
 
@@ -25,7 +21,7 @@ celery = Celery(
 )
 
 # Set up logging configuration
-log_path = './logs/messaging_system.log'
+log_path = '/var/log/messaging_system.log'
 print(f"Log file path: {log_path}")
 
 logging.basicConfig(

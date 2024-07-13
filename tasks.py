@@ -9,10 +9,6 @@ from dotenv import load_dotenv
 # Load environment variables from the .env file
 load_dotenv()
 
-# Ensure the logs directory exists; create it if it does not
-if not os.path.exists('./logs'):
-    os.makedirs('./logs')
-
 # Configure Celery with the broker and backend URLs from environment variables
 celery = Celery(
     'tasks',
@@ -27,7 +23,7 @@ SMTP_SERVER = os.getenv('SMTP_SERVER')
 SMTP_PORT = int(os.getenv('SMTP_PORT'))
 
 # Set the path for the log file
-log_path = './logs/messaging_system.log'
+log_path = '/var/log/messaging_system.log'
 print(f"Log file path: {log_path}")
 
 # Configure logging to write to a file and include timestamps and log levels
