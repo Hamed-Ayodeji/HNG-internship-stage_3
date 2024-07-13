@@ -1,0 +1,9 @@
+curl "https://2bb5-102-88-69-59.ngrok-free.app/process?sendmail=ayodejihamed93@gmail.com&talktime=True"
+
+curl "https://2bb5-102-88-69-59.ngrok-free.app/?sendmail=ayodejihamed93@gmail.com&talktime=True"
+
+celery -A tasks worker --loglevel=info
+
+curl "http://localhost:5000/?sendmail=ayodejihamed93@gmail.com&talktime=True"
+
+chmod 666 messaging_system.log
