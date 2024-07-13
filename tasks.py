@@ -6,49 +6,83 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables from the .env file
 load_dotenv()
 
-# Initialize Celery with broker and backend from environment variables
+# Ensure the logs directory exists; create it if it does not
+if not os.path.exists('./logs'):
+    os.makedirs('./logs')
+
+# Configure Celery with the broker and backend URLs from environment variables
 celery = Celery(
     'tasks',
     broker=os.getenv('CELERY_BROKER_URL'),
     backend=os.getenv('CELERY_RESULT_BACKEND')
 )
 
-# Retrieve email configuration from environment variables
+# Fetch email configurations from environment variables
 EMAIL = os.getenv('EMAIL')
 PASSWORD = os.getenv('PASSWORD')
 SMTP_SERVER = os.getenv('SMTP_SERVER')
 SMTP_PORT = int(os.getenv('SMTP_PORT'))
 
-# Configure basic logging
-logging.basicConfig(level=logging.INFO)
+# Set the path for the log file
+log_path = './logs/messaging_system.log'
+print(f"Log file path: {log_path}")
 
-@celery.task
-def send_email(email):
+# Configure logging to write to a file and include timestamps and log levels
+logging.basicConfig(
+    filename=log_path,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO  # Set log level to INFO to capture all log levels for detailed logging
+)
+
+# Add a console handler to also output logs to the console
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)  # Set console log level to INFO
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logging.getLogger().addHandler(console_handler)
+
+print("Logging is configured")
+
+@celery.task(bind=True)
+def send_email(self, email):
+    """
+    Celery task to send an email.
+    
+    Args:
+        self (Task): The current task instance (automatically passed by Celery).
+        email (str): The recipient's email address.
+    
+    Returns:
+        dict: A dictionary containing the status of the task and the email or error message.
+    """
     try:
-        # Set up SMTP server connection
+        # Set up the SMTP server connection
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()  # Upgrade connection to secure
-        server.login(EMAIL, PASSWORD)  # Log in to the SMTP server
+        server.starttls()  # Upgrade the connection to a secure encrypted SSL/TLS connection
+        server.login(EMAIL, PASSWORD)  # Log in to the email server
         
-        # Create email message with MIME multipart format
+        # Create the email message
         msg = MIMEMultipart()
         msg['From'] = EMAIL
         msg['To'] = email
         msg['Subject'] = "Subject: Test"
-        body = "This is a test email to know it works."
-        msg.attach(MIMEText(body, 'plain'))  # Attach email body
+        body = "This is the stage 3 task given by HNG internship."
+        msg.attach(MIMEText(body, 'plain'))
 
-        # Send email and close server connection
+        # Send the email
         server.sendmail(EMAIL, email, msg.as_string())
-        server.quit()
+        server.quit()  # Terminate the SMTP session
         
-        # Log success
+        # Log success and return a success status
         logging.info(f'Email sent to {email}')
-        print("Email sent")
+        print(f"Email sent to {email}")
+        return {'status': 'SUCCESS', 'email': email}
     except Exception as e:
-        # Log any exceptions during email send process
+        # Log the error and retry the task up to 3 times with a 60-second delay between retries
         logging.error(f'Failed to send email to {email}: {e}')
-        print("Email not sent")
+        print(f"Failed to send email to {email}: {e}")
+        self.retry(exc=e, countdown=60, max_retries=3)
+        return {'status': 'FAILURE', 'error': str(e)}
