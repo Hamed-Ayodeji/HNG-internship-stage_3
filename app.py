@@ -4,25 +4,19 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 from dotenv import load_dotenv
 from celery import Celery
-# from celery_config import Celery
 from tasks import send_email
-from celery.result import AsyncResult  # Import AsyncResult
+from celery.result import AsyncResult
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Initialize Flask app
 app = Flask(__name__)
 
-########################## CELERY #########################################
-# Configure Celery
 celery = Celery(
     __name__,
     broker=os.getenv('CELERY_BROKER_URL'),
     backend=os.getenv('CELERY_RESULT_BACKEND')
 )
 
-# Configure logging
 logging.basicConfig(
     filename='./logs/messaging_system.log',
     format='%(asctime)s - %(levelname)s - %(message)s',

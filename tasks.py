@@ -6,10 +6,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Configure Celery
 celery = Celery(
     'tasks',
     broker=os.getenv('CELERY_BROKER_URL'),
@@ -21,7 +19,6 @@ PASSWORD = os.getenv('PASSWORD')
 SMTP_SERVER = os.getenv('SMTP_SERVER')
 SMTP_PORT = int(os.getenv('SMTP_PORT'))
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 
 @celery.task
