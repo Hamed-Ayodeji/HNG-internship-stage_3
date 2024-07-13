@@ -65,7 +65,7 @@ def send_email(self, email):
         msg['From'] = EMAIL
         msg['To'] = email
         msg['Subject'] = "Subject: Test"
-        body = "This is the stage 3 task given by HNG internship."
+        body = "Congratulations for making it to the HNG internship devops stage 4"
         msg.attach(MIMEText(body, 'plain'))
 
         # Send the email
